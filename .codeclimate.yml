@@ -1,6 +1,26 @@
 plugins:
+  csslint:
+    enabled: true
+  fixme:
+    enabled: true
   phan:
     enabled: true
     config:
       file_extensions: "php"
       ignore-undeclared: true
+  phpcodesniffer:
+    enabled: true
+    config:
+      file_extensions: "php
+      ignore_warnings: true
+      standard: "PSR1,PSR2"
+  phpmd:
+    enabled: true
+    config:
+      file_extensions:
+        - php
+  sonar-php:
+    enabled: true
+    config:
+      tests_patterns:
+        - tests/**
