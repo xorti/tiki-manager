@@ -61,8 +61,7 @@ $(document).ready(function () {
 
 
     // cloning
-    function clonecolors(selector)
-    {
+    function clonecolors(selector) {
         $(selector).each(function () {
             $(this).css('background-color', 'transparent');
         });
@@ -134,6 +133,10 @@ $(document).ready(function () {
         window.location.reload();
     });
 
+    $('#createModal').on('hidden.bs.modal', function (event) {
+        window.location = window.location.href;
+    });
+
     $('#trimModal').on('show.bs.modal', function (event) {
         var ansi = {
             '\\[36m': '<span class="cyan">',
@@ -143,15 +146,17 @@ $(document).ready(function () {
         };
 
         var replaceable_ascii = {
-            27 : ''
+            27: ''
         };
 
         var button = $(event.relatedTarget);
         var ins_id = button.data('id');
         var ins_name = button.data('name');
         var ins_type = button.data('type');
+        var ins_branch = button.data('branch');
         var ins_sourceid = button.data('sourceid');
         var ins_sourcename = button.data('sourcename');
+        var ins_branch = button.data('branch');
         var ins_backup = button.data('backup');
         var modal = $(this);
 
@@ -174,6 +179,12 @@ $(document).ready(function () {
         } else if (ins_type == 'clone') {
             modal.find('h4').text('Clone instance');
             modal.find('.log').html('<span class="cyan">Cloning ' + ins_name + '...</span>');
+        } else if (ins_type == 'upgrade') {
+            modal.find('h4').text('Upgrade instance');
+            modal.find('.log').html('<span class="cyan">Upgrading ' + ins_name + '...</span>');
+        } else if (ins_type == 'cloneupgrade') {
+            modal.find('h4').text('Clone and Upgrade instance');
+            modal.find('.log').html('<span class="cyan">Cloning ' + ins_name + '...</span>');
         }
 
         var loading = "<i id=\"loading-icon\" class=\"fa fa-circle-o-notch fa-spin fa-fw cyan\"></i>\n" +
@@ -183,7 +194,7 @@ $(document).ready(function () {
         var last_response_len = false;
         $.ajax({
             url: BASE_URL + '/scripts/' + ins_type + '.php',
-            xhrFields:{
+            xhrFields: {
                 onprogress: function (e) {
                     var this_response, response = e.currentTarget.response;
                     if (last_response_len === false) {
@@ -219,6 +230,7 @@ $(document).ready(function () {
             data: {
                 id: ins_id,
                 source: ins_sourceid,
+                branch: ins_branch,
                 backup: ins_backup
             }
         }).done(function (log) {
@@ -232,4 +244,61 @@ $(document).ready(function () {
         });
     });
 
+    // upgrade
+    $('.trim-instance-list.upgrade ul.source li').on('click', function () {
+        $('#loading-icon-branch').removeClass('hide');
+        var id = $(this).data('id');
+        $("#instance").val(id);
+        $("#form-upgrade").submit();
+    });
+
+    $('.trim-instance-list.upgrade .branch').on('change', function () {
+        $('.upgrade.btn').attr('data-sourceid', $("#instance").val());
+        $('.upgrade.btn').attr('data-branch', this.value);
+        if (!this.value || !$('.upgrade.btn').attr('data-sourceid')) {
+            $('.upgrade.btn').attr('disabled', true);
+        } else {
+            $('.upgrade.btn').attr('disabled', false);
+        }
+    });
+
+    // clone and upgrade
+    function verifySubmitCloneUpgrade() {
+        if (!$('.cloneupgrade.btn').attr('data-sourceid') ||
+            !$('.cloneupgrade.btn').attr('data-id') ||
+            !$('.cloneupgrade.btn').attr('data-branch')) {
+            $('.cloneupgrade.btn').attr('disabled', true);
+        } else {
+            $('.cloneupgrade.btn').attr('disabled', false);
+        }
+    }
+
+    $('.trim-instance-list.cloneupgrade ul.source li').on('click', function () {
+        var id = $(this).data('id');
+        clonecolors('.trim-instance-list.cloneupgrade ul.source li');
+        $(this).css('background-color', 'palegreen');
+        $('.cloneupgrade.btn').attr('data-sourceid', id);
+        $('.cloneupgrade.btn').attr('data-sourcename', $(this).data('name'));
+        $('.trim-instance-list.cloneupgrade ul.destination').removeClass('hide');
+        $('.trim-instance-list.cloneupgrade ul.destination li').each(function () {
+            $(this).removeClass('hide');
+            if ($(this).data('id') == id) {
+                $(this).addClass('hide');
+            }
+        });
+        verifySubmitCloneUpgrade();
+    });
+
+    $('.trim-instance-list.cloneupgrade ul.destination li').on('click', function () {
+        clonecolors('.trim-instance-list.cloneupgrade ul.destination li');
+        $(this).css('background-color', 'palegreen');
+        $('.cloneupgrade.btn').attr('data-id', $(this).data('id'));
+        $('.cloneupgrade.btn').attr('data-name', $(this).data('name'));
+        verifySubmitCloneUpgrade();
+    });
+
+    $('.trim-instance-list.cloneupgrade .branch').on('change', function () {
+        $('.cloneupgrade.btn').attr('data-branch', this.value);
+        verifySubmitCloneUpgrade();
+    });
 });

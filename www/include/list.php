@@ -15,7 +15,14 @@
             <?php foreach ($instances as $instance) : ?>
                 <?php
                     $version = $instance->getLatestVersion();
-                    $lock = (md5_file(TRIMPATH . '/scripts/maintenance.htaccess') == md5_file($instance->getWebPath('.htaccess')));
+                    $htaccess = $instance->getWebPath('.htaccess');
+                    $access = $instance->getBestAccess('scripting');
+                if (!$access->fileExists($htaccess)) {
+                    $lock = false;
+                } else {
+                    $lock = (md5_file(TRIMPATH . '/scripts/maintenance.htaccess') == md5($access->fileGetContents($htaccess)));
+                }
+
                     $blank = (! $instance->getApplication());
                 ?>
                 <li data-href="<?php echo html(url("view/{$instance->id}")) ?>">
@@ -41,7 +48,7 @@
 
                     <div class="contact">
                         <span class="left">contact: <a href="mailto:<?php echo html("{$instance->contact}") ?>"><?php echo html("{$instance->contact}") ?></a></span>
-                        <span class="right">last update: <b><?php echo html("{$version->date}") ?></b></span>
+                        <span class="right">last update: <b><?= $blank ? '' : html("{$version->date}") ?></b></span>
                     </div>
 
                     <div class="buttons fa">
@@ -66,7 +73,7 @@
         <?php endif; ?>
 
         <p class="clearfix">
-            <a href="#" class="new btn btn-primary disabled">Create a new instance</a>
+            <a href="<?php echo html(url('create')) ?>" class="new btn btn-primary">Create a new instance</a>
             <a href="<?php echo html(url('blank')) ?>" class="blank btn btn-primary">Create a blank instance</a>
             <a href="<?php echo html(url('import')) ?>" class="new btn btn-primary">Import a tiki instance</a>
         </p>

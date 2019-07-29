@@ -29,24 +29,22 @@ class CommandHelper
     /**
      * Get information from Instance Object
      *
-     * @param $instances array of Instance objects
+     * @param array $instances An array of Instance objects
      * @return array|null
      */
     public static function getInstancesInfo($instances)
     {
         $instancesInfo = null;
 
-        if (!empty($instances)) {
-            foreach ($instances as $key => $instance) {
-                $instancesInfo[] = [
-                    $instance->id,
-                    $instance->type,
-                    $instance->name,
-                    $instance->weburl,
-                    $instance->contact,
-                    $instance->branch
-                ];
-            }
+        foreach ($instances as $instance) {
+            $instancesInfo[] = [
+                'id' => $instance->id,
+                'type' => $instance->type,
+                'name' => $instance->name,
+                'url' => $instance->weburl,
+                'email' => $instance->contact,
+                'branch' => $instance->branch
+            ];
         }
 
         return $instancesInfo;
@@ -217,7 +215,7 @@ class CommandHelper
     {
         if (empty($answer)) {
             throw new \RuntimeException(
-                'You must select an #ID'
+                'You must select an instance #ID'
             );
         } else {
             $instancesId = array_filter(array_map('trim', explode(',', $answer)));
@@ -429,11 +427,12 @@ class CommandHelper
         $version = Version::buildFake($details[0], $details[1]);
 
         $io->writeln('Installing application...');
-        $io->note([
-            'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',
-            'you can use \'tiki-manager instance:access\' to complete the installation manually.'
-        ]);
-
+        if (!$nonInteractive) {
+            $io->note([
+                'If for any reason the installation fails (ex: wrong setup.sh parameters for tiki),',
+                'you can use \'tiki-manager instance:access\' to complete the installation manually.'
+            ]);
+        }
         $app->install($version);
 
         if ($app->requiresDatabase()) {
@@ -460,25 +459,17 @@ class CommandHelper
         OutputInterface $output,
         $nonInteractive = false
     ) {
-
         $dbUser = null;
         $io = new SymfonyStyle($input, $output);
 
-        $access = $instance->getBestAccess('scripting');
-        $remoteFile = "{$instance->webroot}/db/local.php";
-
-        if ($access->fileExists($remoteFile)) {
-            $localFile = $access->downloadFile($remoteFile);
-            $dbUser = Database::createFromConfig($instance, $localFile);
-            unlink($localFile);
-
-            if ($dbUser instanceof Database) {
-                return $dbUser;
-            }
+        if ($dbUser = $instance->getDatabaseConfig()) {
+            return $dbUser;
         }
 
-        $io->section(sprintf('Setup database connection in %s', $instance->name));
-        $io->note('Creating databases and users requires root privileges on MySQL.');
+        if (!$nonInteractive) {
+            $io->section(sprintf('Setup database connection in %s', $instance->name));
+            $io->note('Creating databases and users requires root privileges on MySQL.');
+        }
 
         $dbRoot = new Database($instance);
 

@@ -13,6 +13,10 @@ use TikiManager\Libs\Host\Command;
 
 class Git extends VersionControlSystem
 {
+    private $globalOptions = [
+        '--quiet',
+    ];
+
     /**
      * GIT constructor.
      * @param $access
@@ -22,10 +26,6 @@ class Git extends VersionControlSystem
         parent::__construct($access);
         $this->command = 'git';
         $this->repositoryUrl = GIT_TIKIWIKI_URI;
-
-        if (isset($this->configuration['instance']['git_repository_url'])) {
-            $this->repositoryUrl = $this->configuration['instance']['git_repository_url'];
-        }
     }
 
     /**
@@ -49,6 +49,10 @@ class Git extends VersionControlSystem
             }
 
             if (strpos($line, 'refs/heads/') !== false) {
+                // Only list master, versions (20.x, 19.x, 18.3) and experimental branches (example: experimental/acme)
+                if (!preg_match('/^refs\/heads\/(\d+\.(\d+|x)|master|experimental\/.+)$/', $line)) {
+                    continue;
+                }
                 $versions[] = str_replace('refs/heads/', '', $line); // Example: branch/master
             }
 
@@ -74,14 +78,16 @@ class Git extends VersionControlSystem
 
     public function exec($targetFolder, $toAppend, $forcePathOnCommand = false)
     {
-        $command = sprintf('%s %s', $this->command, $toAppend);
+        $toAppend .= ' ' . implode(' ', $this->globalOptions);
+
+        if ($forcePathOnCommand && !empty($targetFolder)) {
+            $command = sprintf('%s -C %s %s', $this->command, $targetFolder, $toAppend);
+        } else {
+            $command = sprintf('%s %s', $this->command, $toAppend);
+        }
 
         if ($this->runLocally) {
             return `$command`;
-        }
-
-        if ($forcePathOnCommand) {
-            $this->access->chdir($targetFolder);
         }
 
         $commandInstance = new Command($command);

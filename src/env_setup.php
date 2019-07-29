@@ -11,6 +11,7 @@ use TikiManager\Libs\Requirements\Requirements;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $dotenv = new Dotenv();
+$dotenv->load(__DIR__.'/../.env.dist');
 $dotenv->loadEnv(__DIR__.'/../.env');
 
 require_once __DIR__ . '/env_includes.php';
@@ -88,6 +89,12 @@ if (! Requirements::getInstance()->check('PHPSqlite')) {
 
 if (! Requirements::getInstance()->check('ssh')) {
     error(Requirements::getInstance()->getRequirementMessage('ssh'));
+    exit;
+}
+
+$vcs = strtolower(DEFAULT_VERSION_CONTROL_SYSTEM);
+if (! Requirements::getInstance()->check($vcs)) {
+    error(Requirements::getInstance()->getRequirementMessage($vcs));
     exit;
 }
 

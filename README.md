@@ -13,6 +13,14 @@ php composer.phar install
 
 To easily configure Tiki-Manager application, copy `.env.dist` file to `.env` and insert your configurations for the uncommented (#) entries.
 
+### Version Control System
+Tiki Manager by default uses git and public repository. If you want o use SVN as your default vcs or another repository please add the following lines to your `.env` file.
+```
+DEFAULT_VCS=svn
+GIT_TIKIWIKI_URI=<CUSTOM_GIT_REPOSITORY_URL>
+SVN_TIKIWIKI_URI=<CUSTOM_SVN_REPOSITORY_URL>
+```
+
 ### Email settings
 To configure Tiki-Manager email sender address add the following line to your `.env` file.
 ```
@@ -26,6 +34,14 @@ SMTP_HOST=<SERVER_ADDRESS>
 SMTP_PORT=<SERVER_PORT>
 SMTP_USER=(optional if authentication is required)
 SMTP_PASS=(optional if authentication is required)
+```
+
+### Web Manager settings
+If you want to setup a default folder to install your web manager or apache user:group are different than apache:apache you can add the following settings to your `.env` file.
+```
+WWW_PATH=<WEB_MANAGER_FOLDER>
+WWW_USER=<APACHE_USER>
+WWW_GROUP=<APACHE_GROUP>
 ```
 
 ## Documentation

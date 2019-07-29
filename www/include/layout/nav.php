@@ -13,7 +13,7 @@
                         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Instances</a>
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="<?php echo html(url('list')) ?>">List instances</a>
-<!--                            <a class="dropdown-item" href="#">Create a new instance</a>-->
+                            <a class="dropdown-item" href="<?php echo html(url('create')) ?>">Create a new instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('blank')) ?>">Create a blank instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('import')) ?>">Import a tiki instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('delete')) ?>">Delete an instance</a>
@@ -24,9 +24,11 @@
                         <div class="dropdown-menu">
 <!--                            <a class="dropdown-item" href="#">Check an instance</a>-->
                             <a class="dropdown-item" href="<?php echo html(url('update')) ?>">Update an instance</a>
-<!--                            <a class="dropdown-item" href="#">Upgrade an instance</a>-->
+                            <a class="dropdown-item" href="<?php echo html(url('upgrade')) ?>">Upgrade an instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('fix')) ?>">Fix an instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('watch')) ?>">Watch an instance</a>
+                            <a class="dropdown-item" href="<?php echo html(url('clone')) ?>">Clone an instance</a>
+                            <a class="dropdown-item" href="<?php echo html(url('cloneupgrade')) ?>">Clone and Upgrade an instance</a>
                         </div>
                     </li>
                     <li class="nav-item dropdown">
@@ -34,8 +36,6 @@
                         <div class="dropdown-menu">
                             <a class="dropdown-item" href="<?php echo html(url('backup')) ?>">Backup an instance</a>
                             <a class="dropdown-item" href="<?php echo html(url('restore')) ?>">Restore an instance</a>
-                            <a class="dropdown-item" href="<?php echo html(url('clone')) ?>">Clone an instance</a>
-<!--                            <a class="dropdown-item" href="#">Clone and upgrade</a>-->
                             <a class="dropdown-item" href="<?php echo html(url('manage')) ?>">Manage backups</a>
                         </div>
                     </li>
