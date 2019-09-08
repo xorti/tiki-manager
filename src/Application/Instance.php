@@ -313,7 +313,7 @@ SQL;
 
     public static function getRestorableInstances()
     {
-        $dp = opendir(BACKUP_FOLDER);
+        $dp = opendir($_ENV['BACKUP_FOLDER']);
 
         $backups = [];
         $matches = [];
@@ -580,7 +580,7 @@ SQL;
     public function getExtensions()
     {
         $access = $this->getBestAccess('scripting');
-        $content = $access->runPHP(TRIM_ROOT . '/scripts/get_extensions.php');
+        $content = $access->runPHP($_ENV['TRIM_ROOT'] . '/scripts/get_extensions.php');
         $modules = explode("\n", $content);
 
         return $modules;
@@ -657,7 +657,16 @@ SQL;
         return $backup->create();
     }
 
-    public function restore($src_app, $archive, $clone = false)
+    /**
+     * Restore instance
+     *
+     * @param $src_app
+     * @param $archive
+     * @param bool $clone
+     * @param bool $checksumCheck
+     * @return null
+     */
+    public function restore($src_app, $archive, $clone = false, $checksumCheck = false)
     {
         $access = $this->getBestAccess('scripting');
 
@@ -699,7 +708,9 @@ SQL;
             $this->getApplication()->fixPermissions();
         }
 
-        $version->collectChecksumFromInstance($this);
+        if ($checksumCheck) {
+            $version->collectChecksumFromInstance($this);
+        }
 
         $flags = '-Rf';
         if (ApplicationHelper::isWindows()) {
@@ -743,7 +754,7 @@ SQL;
     public function isLocked()
     {
         $access = $this->getBestAccess('scripting');
-        $base_htaccess = TRIM_ROOT . '/scripts/maintenance.htaccess';
+        $base_htaccess = $_ENV['TRIM_ROOT'] . '/scripts/maintenance.htaccess';
         $curr_htaccess = $this->getWebPath('.htaccess');
 
         return $access->fileExists($curr_htaccess)
@@ -759,7 +770,7 @@ SQL;
 
         $access = $this->getBestAccess('scripting');
         $path = $access->getInterpreterPath($this);
-        $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.php', 'maintenance.php');
+        $access->uploadFile($_ENV['TRIM_ROOT'] . '/scripts/maintenance.php', 'maintenance.php');
 
         $access->shellExec(sprintf('%s -r "touch(\'maintenance.php\');"', $path));
 
@@ -767,7 +778,7 @@ SQL;
             $access->moveFile('.htaccess', '.htaccess.bak');
         }
 
-        $access->uploadFile(TRIM_ROOT . '/scripts/maintenance.htaccess', '.htaccess');
+        $access->uploadFile($_ENV['TRIM_ROOT'] . '/scripts/maintenance.htaccess', '.htaccess');
         return $this->isLocked();
     }
 

@@ -25,7 +25,7 @@ class Git extends VersionControlSystem
     {
         parent::__construct($access);
         $this->command = 'git';
-        $this->repositoryUrl = GIT_TIKIWIKI_URI;
+        $this->repositoryUrl = $_ENV['GIT_TIKIWIKI_URI'];
     }
 
     /**
@@ -81,7 +81,7 @@ class Git extends VersionControlSystem
         $toAppend .= ' ' . implode(' ', $this->globalOptions);
 
         if ($forcePathOnCommand && !empty($targetFolder)) {
-            $command = sprintf('%s -C %s %s', $this->command, $targetFolder, $toAppend);
+            $command = sprintf('cd %s && %s %s', $targetFolder, $this->command, $toAppend);
         } else {
             $command = sprintf('%s %s', $this->command, $toAppend);
         }

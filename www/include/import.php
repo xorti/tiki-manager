@@ -58,8 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $instance->detectPHP();
         $instance->findApplication();
 
-        header("Location: " . url("list"));
-        exit;
+        ?>
+        <script type="text/javascript">
+            window.location.href = 'list';
+        </script>
+        <?php
     }
 }
 
@@ -78,7 +81,7 @@ $discovery = new Discovery($instance, $access);
 
 $name = 'localhost';
 $weburl = "http://$name";
-$tempdir = TRIM_TEMP;
+$tempdir = $_ENV['TRIM_TEMP'];
 
 $access->host = 'localhost';
 $access->user = $discovery->detectUser();
