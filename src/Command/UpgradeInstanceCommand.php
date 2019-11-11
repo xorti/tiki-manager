@@ -43,6 +43,18 @@ class UpgradeInstanceCommand extends Command
                 'b',
                 InputOption::VALUE_REQUIRED,
                 'Instance branch to update'
+            )
+            ->addOption(
+                'skip-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip rebuilding index step.'
+            )
+            ->addOption(
+                'skip-cache-warmup',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip generating cache step.'
             );
     }
 
@@ -60,6 +72,8 @@ class UpgradeInstanceCommand extends Command
         $instancesOption = $input->getOption('instances');
         $instances = CommandHelper::getInstances('update');
         $instancesInfo = CommandHelper::getInstancesInfo($instances);
+        $skipReindex = $input->getOption('skip-reindex');
+        $skipCache = $input->getOption('skip-cache-warmup');
 
         if (empty($instancesOption)) {
             $io->newLine();
@@ -85,11 +99,7 @@ class UpgradeInstanceCommand extends Command
         foreach ($selectedInstances as $instance) {
             $access = $instance->getBestAccess('scripting');
             $discovery = new Discovery($instance, $access);
-            $phpVersion = $discovery->detectPHPVersion();
-
-            if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
-                $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
-            }
+            $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
             $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
@@ -160,7 +170,11 @@ class UpgradeInstanceCommand extends Command
 
                 if (count($versionSel) > 0) {
                     try {
-                        $filesToResolve = $app->performUpdate($instance, $target, $checksumCheck);
+                        $filesToResolve = $app->performUpdate($instance, $target, [
+                            'checksum-check' => $checksumCheck,
+                            'skip-reindex' => $skipReindex,
+                            'skip-cache-warmup' => $skipCache
+                        ]);
                     } catch (\Exception $e) {
                         CommandHelper::setInstanceSetupError($instance->id, $input, $output);
                         return false;

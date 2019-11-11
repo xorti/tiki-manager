@@ -45,6 +45,18 @@ class UpdateInstanceCommand extends Command
                 'e',
                 InputOption::VALUE_REQUIRED,
                 'Email address to notify in case of failure. Use , (comma) to separate multiple email addresses.'
+            )
+            ->addOption(
+                'skip-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip rebuilding index step.'
+            )
+            ->addOption(
+                'skip-cache-warmup',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip generating cache step.'
             );
     }
 
@@ -107,7 +119,8 @@ class UpdateInstanceCommand extends Command
             }
 
             $checksumCheck = $input->getOption('check');
-
+            $skipReindex = $input->getOption('skip-reindex');
+            $skipCache = $input->getOption('skip-cache-warmup');
             $logs = [];
             foreach ($selectedInstances as $instance) {
                 $log = [];
@@ -115,10 +128,7 @@ class UpdateInstanceCommand extends Command
 
                 $access = $instance->getBestAccess('scripting');
                 $discovery = new Discovery($instance, $access);
-                $phpVersion = $discovery->detectPHPVersion();
-                if (preg_match('/(\d+)(\d{2})(\d{2})$/', $phpVersion, $matches)) {
-                    $phpVersion = sprintf("%d.%d.%d", $matches[1], $matches[2], $matches[3]);
-                }
+                $phpVersion = CommandHelper::formatPhpVersion($discovery->detectPHPVersion());
 
                 $io->writeln('<fg=cyan>Working on ' . $instance->name . "\nPHP version $phpVersion found at " . $discovery->detectPHP() . '</>');
 
@@ -189,7 +199,11 @@ class UpdateInstanceCommand extends Command
                         }
 
                         if (count($versionSel) > 0) {
-                            $filesToResolve = $app->performUpdate($instance, $target, $checksumCheck);
+                            $filesToResolve = $app->performUpdate($instance, $target, [
+                                'checksum-check' => $checksumCheck,
+                                'skip-reindex' => $skipReindex,
+                                'skip-cache-warmup' => $skipCache
+                            ]);
                             $version = $instance->getLatestVersion();
 
                             if ($checksumCheck) {
@@ -206,7 +220,11 @@ class UpdateInstanceCommand extends Command
                     $app_branch = $app->getBranch();
                     if ($app_branch == $branch_name) {
                         try {
-                            $filesToResolve = $app->performUpdate($instance, null, $checksumCheck);
+                            $filesToResolve = $app->performUpdate($instance, null, [
+                                'checksum-check' => $checksumCheck,
+                                'skip-reindex' => $skipReindex,
+                                'skip-cache-warmup' => $skipCache
+                            ]);
                             $version = $instance->getLatestVersion();
 
                             if ($checksumCheck) {

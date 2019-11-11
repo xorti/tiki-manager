@@ -231,12 +231,13 @@ class Tiki extends Application
     public function getFileLocations()
     {
         $access = $this->instance->getBestAccess('scripting');
+        $webroot = rtrim($this->instance->webroot, '/');
         $out = $access->runPHP(
             dirname(__FILE__) . '/../../scripts/tiki/get_directory_list.php',
-            [$this->instance->webroot]
+            [$webroot]
         );
 
-        $folders['app'] = [$this->instance->webroot];
+        $folders['app'] = [$webroot];
 
         foreach (explode("\n", $out) as $line) {
             $line = trim($line);
@@ -371,8 +372,8 @@ class Tiki extends Application
             } else {
                 $host->rsync([
                     'src' => rtrim($folder, '/') . '/',
-                    'dest' => rtrim($this->instance->webroot, '/') . '/'
-                ], ['exclude' => ['.phpenv']
+                    'dest' => rtrim($this->instance->webroot, '/') . '/',
+                    'exclude' => ['.phpenv']
                 ]);
             }
         } else {
@@ -422,7 +423,7 @@ class Tiki extends Application
         return $this->installed;
     }
 
-    public function performActualUpdate(Version $version)
+    public function performActualUpdate(Version $version, $options = [])
     {
         $access = $this->instance->getBestAccess('scripting');
         $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
@@ -483,18 +484,24 @@ class Tiki extends Application
         $this->setDbLock();
 
         if ($this->instance->hasConsole()) {
-            info('Rebuilding Index...');
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+            if (empty($options['skip-reindex'])) {
+                info('Rebuilding Index...');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+            }
+
             info('Cleaning Cache...');
             $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
-            info('Generating Caches...');
-            $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
+
+            if (empty($options['skip-cache-warmup'])) {
+                info('Generating Caches...');
+                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
+            }
         }
 
         return;
     }
 
-    public function performActualUpgrade(Version $version, $abort_on_conflict)
+    public function performActualUpgrade(Version $version, $options = [])
     {
         $access = $this->instance->getBestAccess('scripting');
         $can_svn = $access->hasExecutable('svn') && $this->vcs_instance->getIdentifier() == 'SVN';
@@ -551,12 +558,18 @@ class Tiki extends Application
             $this->setDbLock();
 
             if ($this->instance->hasConsole()) {
-                info('Rebuilding Index...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+                if (empty($options['skip-reindex'])) {
+                    info('Rebuilding Index...');
+                    $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php index:rebuild --log");
+                }
+
                 info('Cleaning Cache...');
                 $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:clear");
-                info('Generating Caches...');
-                $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
+
+                if (empty($options['skip-cache-warmup'])) {
+                    info('Generating Caches...');
+                    $access->shellExec("{$this->instance->phpexec} -q -d memory_limit=256M console.php cache:generate");
+                }
             }
 
             return;
