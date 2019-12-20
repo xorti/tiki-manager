@@ -48,10 +48,28 @@ class CloneAndUpgradeInstanceCommand extends Command
                 'Select Branch.'
             )
             ->addOption(
+                'live-reindex',
+                null,
+                InputOption::VALUE_NONE,
+                'Live reindex, set instance maintenance off and after perform index rebuild.'
+            )
+            ->addOption(
                 'direct',
                 'd',
                 InputOption::VALUE_NONE,
                 'Prevent using the backup step and rsync source to target.'
+            )
+            ->addOption(
+                'keep-backup',
+                null,
+                InputOption::VALUE_NONE,
+                'Source instance backup is not deleted before the process finished.'
+            )
+            ->addOption(
+                'use-last-backup',
+                null,
+                InputOption::VALUE_NONE,
+                'Use source instance last created backup.'
             );
     }
 
@@ -76,20 +94,32 @@ class CloneAndUpgradeInstanceCommand extends Command
         if ($input->getOption('check')) {
             $arguments['--check'] = true;
         }
-        if ($source = $input->getOption("source")) {
+        if ($source = $input->getOption('source')) {
             $arguments['--source'] = $source;
         }
 
-        if ($target = $input->getOption("target")) {
+        if ($target = $input->getOption('target')) {
             $arguments['--target'] = $target;
         }
 
-        if ($branch = $input->getOption("branch")) {
+        if ($branch = $input->getOption('branch')) {
             $arguments['--branch'] = $branch;
+        }
+
+        if ($liveReindex = $input->getOption('live-reindex')) {
+            $arguments['--live-reindex'] = $liveReindex;
         }
 
         if ($direct = $input->getOption('direct')) {
             $arguments['--direct'] = $direct;
+        }
+
+        if ($keepBackup = $input->getOption('keep-backup')) {
+            $arguments['--keep-backup'] = $keepBackup;
+        }
+
+        if ($useLastBackup = $input->getOption('use-last-backup')) {
+            $arguments['--use-last-backup'] = $useLastBackup;
         }
 
         $verifyInstanceInput = new ArrayInput($arguments);

@@ -690,6 +690,7 @@ SQL;
         $oldVersion = $this->getLatestVersion();
 
         $databaseConfig = $this->getDatabaseConfig();
+        $this->getApplication()->deleteAllTables();
         $this->getApplication()->restoreDatabase($databaseConfig, $database_dump);
 
         if (!$this->findApplication()) { // a version is created in this call
