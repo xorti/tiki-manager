@@ -1,5 +1,19 @@
+exclude_patterns:
+  - "backup/"
+  - "cache/"
+  - "logs/"
+  - "tmp/"
+  - "**/test/"
+  - "**/tests/"
+  - "**/vendor/"
+  - "**/vendor-bin/"
+  - "scripts/get_extensions.php"
+  - "scripts/extract_tar.php"
+
 plugins:
   csslint:
+    enabled: true
+  eslint:
     enabled: true
   fixme:
     enabled: true
