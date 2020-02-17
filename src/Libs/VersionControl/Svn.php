@@ -8,6 +8,7 @@
 namespace TikiManager\Libs\VersionControl;
 
 use Exception;
+use TikiManager\Application\Instance;
 use TikiManager\Application\Version;
 use TikiManager\Libs\Host\Command;
 
@@ -21,11 +22,11 @@ class Svn extends VersionControlSystem
 
     /**
      * SVN constructor.
-     * @param $access
+     * @inheritDoc
      */
-    public function __construct($access)
+    public function __construct(Instance $instance)
     {
-        parent::__construct($access);
+        parent::__construct($instance);
         $this->command = 'svn';
         $this->repositoryUrl = $_ENV['SVN_TIKIWIKI_URI'];
     }
@@ -237,11 +238,7 @@ class Svn extends VersionControlSystem
             return false;
         }
 
-        if (! $this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
-            $path = $this->access->getInterpreterPath($this);
-            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder .  self::SVN_TEMP_FOLDER_PATH);
-            $this->access->createCommand($path, ["-r {$script}"])->run();
-        }
+        $this->ensureTempFolder($targetFolder);
 
         try {
             $conflicts = $this->merge($targetFolder, 'BASE:HEAD');
@@ -281,5 +278,14 @@ class Svn extends VersionControlSystem
         }
 
         $this->cleanup($targetFolder);
+    }
+
+    public function ensureTempFolder($targetFolder)
+    {
+        if (!$this->access->fileExists($targetFolder . self::SVN_TEMP_FOLDER_PATH)) {
+            $path = $this->access->getInterpreterPath($this);
+            $script = sprintf("mkdir('%s', 0777, true);", $targetFolder . self::SVN_TEMP_FOLDER_PATH);
+            $this->access->createCommand($path, ["-r {$script}"])->run();
+        }
     }
 }
